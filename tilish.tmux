@@ -86,10 +86,8 @@ tmux $bind "${mod}${rename}" \
 
 # Close a window with Alt + Shift + q.
 tmux $bind "${mod}${closew}" \
-  if-shell \
-  '[ "$(tmux display-message -p "#{window_panes}")" -gt 1 ]' \
-  'kill-pane; select-layout; select-layout -E' \
-  'kill-pane'
+  if-shell '[ "$(tmux display-message -p "#{window_panes}")" -gt 1 ]' 'kill-pane' 'kill-window'
+
 # Close a connection with Alt + Shift + e.
 tmux $bind "${mod}${closec}" \
 	confirm-before -p "Detach from #H:#S? (y/n)" detach-client
