@@ -53,7 +53,7 @@ bind_move "${mod}*" 8
 bind_move "${mod}(" 9
 bind_move "${mod})" 10
 
-char_at() { echo "${1:$(($2-1)):1}"; }
+char_at() { printf '%s\n' "$1" | cut -c "$2"; }
 
 # Bind keys to switch or refresh layouts.
 bind_layout() {
@@ -78,7 +78,7 @@ tmux $bind "${mod}${refresh}" select-layout -E
 
 # Open a terminal with Alt + enter
 tmux $bind "${mod}${new_pane}" \
-  run-shell 'cwd="`tmux display -p \"#{pane_current_path}\"`"; tmux select-pane -t "bottom-right"; tmux split-pane -c "$cwd"'
+  run-shell 'cwd="$(tmux display -p "#{pane_current_path}")"; [ -z "$cwd" ] && cwd="$HOME"; tmux select-pane -t "bottom-right"; tmux split-pane -c "$cwd"'
 
 # Name a window with Alt + n
 tmux $bind "${mod}${rename}" \
@@ -100,7 +100,7 @@ tmux $bind "${mod}${reload}" \
 
 # Autorefresh layout after deleting a pane.
 tmux set-hook -g after-split-window "select-layout; select-layout -E"
-tmux set-hook -g pane-exited "select-layout; select-layout -E"
+tmux set-hook -g pane-exited "select-layout -E"
 
 # Autoselect layout after creating new window.
 if [ -n "${default:-}" ]; then
@@ -111,4 +111,4 @@ fi
 
 # Integrate with `fzf` to approximate `dmenu`
 tmux $bind "${mod}${fzf}" \
-  select-pane -t '{bottom-right}' \\\; split-pane 'sh -c "exec \$(echo \"\$PATH\" | tr \":\" \"\n\" | xargs -I{} -- find {} -maxdepth 1 -mindepth 1 -executable 2>/dev/null | sort -u | fzf)"'
+  select-pane -t '{bottom-right}' \\\; split-pane 'sh -c "exec \$(IFS=:; fd --type executable --max-depth 1 . \$PATH 2>/dev/null | xargs -n1 basename | sort -u | fzf)"'
